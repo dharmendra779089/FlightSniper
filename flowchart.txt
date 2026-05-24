@@ -1,0 +1,63 @@
+[ START (main.py) ]
+   │
+   ├─► [ INITIALIZATION ] 
+   │      ├─ Enable API Caching (requests_cache)
+   │      └─ Initialize Helper Classes (Data, Search, Notification)
+   │
+   ▼
+[ FETCH SPREADSHEET DATA (Sheety API) ]
+   │
+   └─► Send GET Request to Sheety Endpoint
+   │   (Retrieves list of cities, IATA codes, and historical lowest prices)
+   │
+   ▼
+[ SET SEARCH PARAMETERS ]
+   │
+   └─► Origin: LHR (London)
+   └─► Date Range: Tomorrow ──to──> 6 Months from today
+   │
+   ▼
+[ LOOP: For each destination in the Google Sheet ] ◄─────┐
+   │                                                     │
+   ├─► [ SEARCH FLIGHTS (SerpAPI) ]                      │
+   │      └─ Send GET Request to Google Flights API      │
+   │         (Looking for round trips in date range)     │
+   │                                                     │
+   ▼                                                     │
+[ PARSE DATA (flight_data.py) ]                          │
+   │                                                     │
+   ├─► Scan all returned flights                         │
+   └─► Identify the absolute cheapest flight             │
+   │                                                     │
+   ▼                                                     │
+[ DECISION: Is the new flight cheaper than the Sheet? ]  │
+   │   ( cheapest_flight < destination["lowestPrice"] )  │
+   │                                                     │
+   ├─► [ NO ] ───────────────────────────────────────────┤
+   │    (Do nothing, move to next city)                  │
+   │                                                     │
+   └─► [ YES ]                                           │
+        │                                                │
+        ▼                                                │
+     [ UPDATE SHEET (Sheety API) ]                       │
+        │                                                │
+        └─► Send PUT Request to Google Sheet             │
+        │   (Overwrite old lowest price with new one)    │
+        │                                                │
+        ▼                                                │
+     [ SEND ALERT (Twilio API) ]                         │
+        │                                                │
+        └─► Construct alert message string               │
+        └─► Send WhatsApp (or SMS) message to phone      │
+        │                                                │
+        └────────────────────────────────────────────────┘
+   │
+   ▼
+[ ARE THERE MORE DESTINATIONS? ]
+   │
+   ├─► [ YES ] ──────────────────────────────────────────┘ (Back to Loop)
+   │
+   └─► [ NO ]
+        │
+        ▼
+     [ END ]
